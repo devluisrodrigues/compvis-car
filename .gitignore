@@ -1,3 +1,7 @@
 teste2/
 ./venv/
 *.zip
+*.png
+*.jpg
+*.jpeg
+.env
