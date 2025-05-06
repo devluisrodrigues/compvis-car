@@ -12,7 +12,11 @@ Para usar o projeto, siga as instruções abaixo:
 pip install -r requirements.txt
 ```
 Desenvolvido por:
-Ananda Campelo
-Fernando Alzueta
-João Pedro Rodrigues
-Luis Antônio Rodrigues
+
+- Ananda Campelo
+
+- Fernando Alzueta
+
+- João Pedro Rodrigues
+
+- Luis Antônio Rodrigues
