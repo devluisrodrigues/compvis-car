@@ -9,6 +9,8 @@ ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
 
 
 
+ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+
 def change_char_in_position(word, position):
     if position < len(word):
         if word[position].isdigit():
@@ -17,6 +19,10 @@ def change_char_in_position(word, position):
                 word = word[:position] + 'B' + word[position+1:]
             elif digit == '1':
                 word = word[:position] + 'I' + word[position+1:]
+            elif digit == '0':
+                word = word[:position] + 'O' + word[position+1:]
+            elif digit == '5':
+                word = word[:position] + 'S' + word[position+1:]
     return word
 
 def detect_blue_strip(image_path):
@@ -25,13 +31,13 @@ def detect_blue_strip(image_path):
         return False
 
     height, width = image.shape[:2]
-    top_strip = image[0:int(height * 0.15), 0:width]  # faixa de cima
+    top_strip = image[0:int(height * 0.25), 0:width]  # faixa de cima
 
     hsv = cv2.cvtColor(top_strip, cv2.COLOR_BGR2HSV)
 
     # Faixa de azul (com tolerância maior para placas borradas)
-    lower_blue = np.array([90, 40, 40])
-    upper_blue = np.array([140, 255, 255])
+    lower_blue = np.array([110, 160, 65])
+    upper_blue = np.array([130, 255, 255])
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
     blue_ratio = cv2.countNonZero(mask) / (top_strip.shape[0] * top_strip.shape[1])
