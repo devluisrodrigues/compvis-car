@@ -2,6 +2,12 @@ import cv2
 import numpy as np
 from paddleocr import PaddleOCR
 import re
+from collections import Counter, defaultdict
+
+
+ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+
+
 
 def change_char_in_position(word, position):
     if position < len(word):
@@ -55,16 +61,32 @@ def correct_plate(word, is_new_plate):
 
     return None
 
-ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
 
-def extract_plate_from_image(image_path):
-    is_new_plate = detect_blue_strip(image_path)
-    result = ocr.ocr(image_path, cls=True)
-    
+def detect_blue_strip_from_array(image):
+    if image is None:
+        return False
+
+    height, width = image.shape[:2]
+    top_strip = image[0:int(height * 0.15), 0:width]
+
+    hsv = cv2.cvtColor(top_strip, cv2.COLOR_BGR2HSV)
+    lower_blue = np.array([90, 40, 40])
+    upper_blue = np.array([140, 255, 255])
+    mask = cv2.inRange(hsv, lower_blue, upper_blue)
+
+    blue_ratio = cv2.countNonZero(mask) / (top_strip.shape[0] * top_strip.shape[1])
+    return blue_ratio > 0.03
+
+
+
+def extract_plate_from_image(image, plates):
+    is_new_plate = detect_blue_strip_from_array(image)
+    result = ocr.ocr(image, cls=True)
+
     if not result or result[0] is None:
         print("No text detected.")
-        return None    
-    
+        return None
+
     detected_words = []
     for line in result:
         for word_info in line:
@@ -72,23 +94,50 @@ def extract_plate_from_image(image_path):
             if text.lower() == "brasil":
                 is_new_plate = True
             else:
-                detected_words.append((text, word_info[1][1]))  # (text, confidence)
-    
-    print(f"Palavras detectadas: {detected_words}")
-    print(f"É nova placa? {is_new_plate}")    
-    
-    # Tenta cada palavra isolada
+                detected_words.append((text, word_info[1][1]))
+
+    # Tenta palavras individuais
     for word_tuple in detected_words:
         corrected = correct_plate(word_tuple[0], is_new_plate)
-        if corrected:
+        if corrected and corrected not in plates:
             return corrected
 
-    # Tenta pares de palavras combinadas
+    # Tenta combinações de palavras
     for i in range(len(detected_words)):
         for j in range(i+1, len(detected_words)):
             combined = detected_words[i][0] + detected_words[j][0]
             corrected = correct_plate(combined, is_new_plate)
-            if corrected:
+            if corrected and corrected not in plates:
                 return corrected
 
     return None
+
+
+
+
+def hamming_distance(a, b):
+    if len(a) != len(b):
+        return float('inf')
+    return sum(ch1 != ch2 for ch1, ch2 in zip(a, b))
+
+def agrupar_placas_por_hamming(plate_counts, max_dist=1):
+    grupos = []
+    usadas = set()
+
+    placas = list(plate_counts.keys())
+
+    for i in range(len(placas)):
+        if placas[i] in usadas:
+            continue
+
+        grupo = [placas[i]]
+        usadas.add(placas[i])
+
+        for j in range(i + 1, len(placas)):
+            if placas[j] not in usadas and hamming_distance(placas[i], placas[j]) <= max_dist:
+                grupo.append(placas[j])
+                usadas.add(placas[j])
+
+        grupos.append(grupo)
+
+    return grupos

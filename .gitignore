@@ -1,4 +1,8 @@
-teste2/
 ./venv/
-.env
-new_imgs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.DS_Store
+.env/
+**/venv/
