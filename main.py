@@ -1,4 +1,4 @@
-from src.utils import extract_plate_from_image, agrupar_placas_por_hamming
+from src.utils import extract_plate_from_image, agrupar_placas_por_hamming_completo
 from src.models import YOLO, classify_and_crop
 import cv2 as cv
 from collections import Counter
@@ -10,6 +10,10 @@ FPS = 30
 
 
 def main():
+    max_dist = 2
+
+    # --- Configurações iniciais ---
+
     capture = cv.VideoCapture('video/video1.MOV')
     if not capture.isOpened():
         print("Could not open video file")
@@ -20,12 +24,12 @@ def main():
         print("Could not read first frame")
         return
 
-    model = YOLO('last.pt')  # carrega só uma vez
+    model = YOLO('last.pt')
     cv.namedWindow(TITLE)
     delay = int(1000 / FPS)
 
     frame_count = 0
-    all_plates = []  # Armazena TODAS as leituras
+    all_plates = []
 
     while True:
         success, frame = capture.read()
@@ -64,9 +68,9 @@ def main():
         print(f"{i}. {plate}: {count}x")
 
     # Agrupamento por similaridade
-    grupos = agrupar_placas_por_hamming(plate_counts, max_dist=1)
+    grupos = agrupar_placas_por_hamming_completo(plate_counts, max_dist)
 
-    print("\nMost likely plates by group (based on Hamming distance ≤ 1):\n")
+    print(f"\nMost likely plates by group (based on Hamming distance ≤ {max_dist}):\n")
     for i, grupo in enumerate(grupos, 1):
         # Seleciona a placa com maior frequência no grupo
         placa_mais_frequente = max(grupo, key=lambda p: plate_counts[p])

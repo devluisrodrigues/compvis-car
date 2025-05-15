@@ -8,9 +8,6 @@ from collections import Counter, defaultdict
 ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
 
 
-
-ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
-
 def change_char_in_position(word, position):
     if position < len(word):
         if word[position].isdigit():
@@ -119,31 +116,36 @@ def extract_plate_from_image(image, plates):
     return None
 
 
-
-
 def hamming_distance(a, b):
     if len(a) != len(b):
         return float('inf')
     return sum(ch1 != ch2 for ch1, ch2 in zip(a, b))
 
-def agrupar_placas_por_hamming(plate_counts, max_dist=1):
-    grupos = []
-    usadas = set()
-
+def agrupar_placas_por_hamming_completo(plate_counts, max_dist=1):
     placas = list(plate_counts.keys())
+    grafo = defaultdict(list)
 
     for i in range(len(placas)):
-        if placas[i] in usadas:
-            continue
-
-        grupo = [placas[i]]
-        usadas.add(placas[i])
-
         for j in range(i + 1, len(placas)):
-            if placas[j] not in usadas and hamming_distance(placas[i], placas[j]) <= max_dist:
-                grupo.append(placas[j])
-                usadas.add(placas[j])
+            if hamming_distance(placas[i], placas[j]) <= max_dist:
+                grafo[placas[i]].append(placas[j])
+                grafo[placas[j]].append(placas[i])
 
-        grupos.append(grupo)
+    visitado = set()
+    grupos = []
+
+    def dfs(placa, grupo):
+        visitado.add(placa)
+        grupo.append(placa)
+        for vizinho in grafo[placa]:
+            if vizinho not in visitado:
+                dfs(vizinho, grupo)
+
+    for placa in placas:
+        if placa not in visitado:
+            grupo = []
+            dfs(placa, grupo)
+            grupos.append(grupo)
 
     return grupos
+
