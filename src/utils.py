@@ -133,6 +133,7 @@ def agrupar_placas_por_hamming_completo(plate_counts, max_dist=1):
 
     visitado = set()
     grupos = []
+    
 
     def dfs(placa, grupo):
         visitado.add(placa)

@@ -12,7 +12,6 @@ FPS = 30
 def main():
     max_dist = 2
 
-    # --- Configurações iniciais ---
 
     capture = cv.VideoCapture('video/video1.MOV')
     if not capture.isOpened():
