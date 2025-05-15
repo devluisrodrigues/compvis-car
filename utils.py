@@ -3,7 +3,13 @@ import numpy as np
 from paddleocr import PaddleOCR
 import re
 
-ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+ocr = PaddleOCR(
+        use_angle_cls=True, 
+        lang='en', 
+        show_log=False,
+        det_db_thresh=0.3,
+        det_db_box_thresh=0.5
+    )
 
 def change_char_in_position(word, position):
     if position < len(word):
@@ -23,7 +29,7 @@ def detect_blue_strip(image_path):
     image = cv2.imread(image_path)
     if image is None:
         return False
-
+    
     height, width = image.shape[:2]
     top_strip = image[0:int(height * 0.25), 0:width]  # faixa de cima
 
@@ -61,22 +67,27 @@ def correct_plate(word, is_new_plate):
 
     return None
 
+
 def extract_plate_from_image(image_path):
+    # Preprocess the image
     is_new_plate = detect_blue_strip(image_path)
     result = ocr.ocr(image_path, cls=True)
-    
+        
     if not result or result[0] is None:
+        print("Nenhum resultado encontrado.")
         return None    
     
     detected_words = []
     for line in result:
         for word_info in line:
             text = word_info[1][0].replace(" ", "")
+            text = limpar_placa(text)
+            print(f"Texto detectado: {text}")
             if text.lower() == "brasil":
                 is_new_plate = True
             else:
                 detected_words.append((text, word_info[1][1]))  # (text, confidence)
-    
+                    
     # print(f"Palavras detectadas: {detected_words}")
     # print(f"É nova placa? {is_new_plate}")    
     
@@ -90,8 +101,9 @@ def extract_plate_from_image(image_path):
     for i in range(len(detected_words)):
         for j in range(i+1, len(detected_words)):
             combined = detected_words[i][0] + detected_words[j][0]
+            print(f"Combinando: {combined}")
             corrected = correct_plate(combined, is_new_plate)
             if corrected:
-                return corrected
+                return corrected    
 
     return None
