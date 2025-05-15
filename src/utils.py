@@ -5,7 +5,9 @@ import re
 from collections import Counter, defaultdict
 
 
-ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+ocr = PaddleOCR(use_angle_cls=True,
+                lang='en', 
+                show_log=False)
 
 
 def change_char_in_position(word, position):
