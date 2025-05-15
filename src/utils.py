@@ -5,9 +5,13 @@ import re
 from collections import Counter, defaultdict
 
 
-ocr = PaddleOCR(use_angle_cls=True,
-                lang='en', 
-                show_log=False)
+ocr = PaddleOCR(
+        use_angle_cls=True, 
+        lang='en', 
+        show_log=False,
+        det_db_thresh=0.3,
+        det_db_box_thresh=0.5
+    )
 
 
 def change_char_in_position(word, position):
@@ -22,13 +26,16 @@ def change_char_in_position(word, position):
                 word = word[:position] + 'O' + word[position+1:]
             elif digit == '5':
                 word = word[:position] + 'S' + word[position+1:]
+            elif digit == '6':
+                word = word[:position] + 'G' + word[position+1:]
+            elif digit == '3':
+                word = word[:position] + 'J' + word[position+1:]
     return word
 
-def detect_blue_strip(image_path):
-    image = cv2.imread(image_path)
+def detect_blue_strip(image):
     if image is None:
         return False
-
+    
     height, width = image.shape[:2]
     top_strip = image[0:int(height * 0.25), 0:width]  # faixa de cima
 
@@ -67,41 +74,30 @@ def correct_plate(word, is_new_plate):
     return None
 
 
-def detect_blue_strip_from_array(image):
-    if image is None:
-        return False
-
-    height, width = image.shape[:2]
-    top_strip = image[0:int(height * 0.15), 0:width]
-
-    hsv = cv2.cvtColor(top_strip, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([90, 40, 40])
-    upper_blue = np.array([140, 255, 255])
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-
-    blue_ratio = cv2.countNonZero(mask) / (top_strip.shape[0] * top_strip.shape[1])
-    return blue_ratio > 0.03
-
-
-
-def extract_plate_from_image(image, plates):
-    is_new_plate = detect_blue_strip_from_array(image)
-    result = ocr.ocr(image, cls=True)
-
+def extract_plate_from_image(image_path, plates):
+    # Preprocess the image
+    is_new_plate = detect_blue_strip(image_path)
+    result = ocr.ocr(image_path, cls=True)
+        
     if not result or result[0] is None:
-        print("No text detected.")
-        return None
-
+        print("Nenhum resultado encontrado.")
+        return None    
+    
     detected_words = []
     for line in result:
         for word_info in line:
             text = word_info[1][0].replace(" ", "")
+            text = limpar_placa(text)
+            print(f"Texto detectado: {text}")
             if text.lower() == "brasil":
                 is_new_plate = True
             else:
-                detected_words.append((text, word_info[1][1]))
-
-    # Tenta palavras individuais
+                detected_words.append((text, word_info[1][1]))  # (text, confidence)
+                    
+    # print(f"Palavras detectadas: {detected_words}")
+    # print(f"É nova placa? {is_new_plate}")    
+    
+    # Tenta cada palavra isolada
     for word_tuple in detected_words:
         corrected = correct_plate(word_tuple[0], is_new_plate)
         if corrected and corrected not in plates:
@@ -111,9 +107,10 @@ def extract_plate_from_image(image, plates):
     for i in range(len(detected_words)):
         for j in range(i+1, len(detected_words)):
             combined = detected_words[i][0] + detected_words[j][0]
+            print(f"Combinando: {combined}")
             corrected = correct_plate(combined, is_new_plate)
-            if corrected and corrected not in plates:
-                return corrected
+            if corrected:
+                return corrected    
 
     return None
 
