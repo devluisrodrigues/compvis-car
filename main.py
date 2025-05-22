@@ -36,7 +36,7 @@ def main():
 
         frame_count += 1
 
-        if frame_count % 10 == 0:
+        if frame_count % (FPS/3) == 0:
             frame_count = 0
             cropped_imgs = classify_and_crop(frame, model)
 
@@ -80,19 +80,19 @@ def main():
         placas_finais.append(placa_mais_frequente)
         total = sum(plate_counts[placa] for placa in grupo)
         if total > 1:
-            print(f"{i}. {placa_mais_frequente} (grupo: {' | '.join(grupo)}) --> total: {total}x")
+            print(f"{i}. {placa_mais_frequente} (group: {' | '.join(grupo)}) --> total: {total}x")
 
     print("\nPlates not in the reference list:\n")
     acerto = 0
 
     for placa in placas_finais:
         if placa not in gabarito:
-            print(f"Placa não encontrada: {placa}")
+            print(f"Plate not found: {placa}")
         else:
             acerto += 1    
 
-    print(f"\nTotal de acertos: {acerto} de {len(placas_finais)} placas.\n")
-    print(f"Porcentual de acertos: {round((acerto / len(placas_finais)) * 100, 2)}%.\n")
+    print(f"\nTotal correct guesses: {acerto} from {len(placas_finais)} plates.\n")
+    print(f"Correct guess percentage: {round((acerto / len(placas_finais)) * 100, 2)}%.\n")
     
 
 

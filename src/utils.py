@@ -3,14 +3,12 @@ import numpy as np
 from paddleocr import PaddleOCR
 import re
 from collections import Counter, defaultdict
-
+# from .gemini_fallback import gemini_fallback, can_call_gemini
 
 ocr = PaddleOCR(
         use_angle_cls=True, 
         lang='en', 
-        show_log=False,
-        det_db_thresh=0.3,
-        det_db_box_thresh=0.5
+        show_log=False
     )
 
 
@@ -95,7 +93,8 @@ def extract_plate_from_image(image_path, plates):
                 detected_words.append((text, word_info[1][1]))  # (text, confidence)
                     
     # print(f"Palavras detectadas: {detected_words}")
-    # print(f"É nova placa? {is_new_plate}")    
+    if is_new_plate:
+        print(f"É nova placa? {is_new_plate}")    
     
     # Tenta cada palavra isolada
     for word_tuple in detected_words:
@@ -111,6 +110,14 @@ def extract_plate_from_image(image_path, plates):
             corrected = correct_plate(combined, is_new_plate)
             if corrected:
                 return corrected    
+    
+    # print("Fazendo fallback para Gemini...")
+    # if can_call_gemini():
+    #     gemini_plate = gemini_fallback(image_path if isinstance(image_path, np.ndarray) else cv2.imread(image_path), is_new_plate)
+    #     if gemini_plate:
+    #         return gemini_plate
+    # else:
+    #     print("Limite de chamadas à API do Gemini atingido. Aguardando...")
 
     return None
 
