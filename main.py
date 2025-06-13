@@ -3,14 +3,14 @@ from src.models import YOLO, classify_and_crop
 import cv2 as cv
 from collections import Counter
 
-# Video title and FPS
-TITLE = 'video1.MOV'
+# VIDEO_PATH and FPS
+VIDEO_PATH = 'video1.MOV'
 FPS = 30
 
 def main():
     max_dist = 2
 
-    capture = cv.VideoCapture(TITLE)
+    capture = cv.VideoCapture(VIDEO_PATH)
     if not capture.isOpened():
         print("Could not open video file")
         return
@@ -21,7 +21,7 @@ def main():
         return
 
     model = YOLO('last.pt')
-    cv.namedWindow(TITLE)
+    cv.namedWindow(VIDEO_PATH)
     delay = int(1000 / FPS)
 
     frame_count = 0
@@ -51,10 +51,10 @@ def main():
                 
         frame = cv.resize(frame, (640, 480))
 
-        cv.imshow(TITLE, frame)
+        cv.imshow(VIDEO_PATH, frame)
 
         key = cv.waitKey(delay)
-        if key == ord('q') or not cv.getWindowProperty(TITLE, cv.WND_PROP_VISIBLE):
+        if key == ord('q') or not cv.getWindowProperty(VIDEO_PATH, cv.WND_PROP_VISIBLE):
             print("Exiting...\n")
             break
 
@@ -67,10 +67,6 @@ def main():
         print(f"{i}. {plate}: {count}x")
 
     grupos = agrupar_placas_por_hamming_completo(plate_counts, max_dist)
-
-    gabarito = ['SWI3B77', 'CUY1B80', 'GDY4G44', 'STK3G35', 'GCZ7D94', 'CGN9J94', 'SVG1E26', 'SUW1C12', 'FWR5B86', 'DSV7C13', 'SSZ5I11', 'FNC1F27', 'CUH4G26',
-                'CUT4H69', 'FIO2H66', 'DGL6088', 'EUD7280', 'TDP8C43', 'DFR7733', 'GEJ4J73', 'GDT2B64', 'DES5518', 'GCK4H60', 'GAR4G31', 'QXF1E08', 'GHV7564',
-                'FMJ6399', 'ALF8F22', 'FRY2I96', 'BSX6F35', 'BQU2B91']
     
     placas_finais = []
     
@@ -82,19 +78,6 @@ def main():
         total = sum(plate_counts[placa] for placa in grupo)
         if total > 1:
             print(f"{i}. {placa_mais_frequente} (group: {' | '.join(grupo)}) --> total: {total}x")
-
-    print("\nPlates not in the reference list:\n")
-    acerto = 0
-
-    for placa in placas_finais:
-        if placa not in gabarito:
-            print(f"Plate not found: {placa}")
-        else:
-            acerto += 1    
-
-    print(f"\nTotal correct guesses: {acerto} from {len(placas_finais)} plates.\n")
-    print(f"Correct guess percentage: {round((acerto / len(placas_finais)) * 100, 2)}%.\n")
-    
 
 
     capture.release()
