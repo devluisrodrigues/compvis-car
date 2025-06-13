@@ -55,6 +55,17 @@ Observação: Esse é um repositorio de sandbox, com base nisso, ele foi feito d
 Um exemplo de vídeo pode ser baixado através do seguinte link: [Vídeo de Teste](https://drive.google.com/file/d/1XNbcr_f4QMEOeNUYhFSb43UWp1OSfG4-/view?usp=sharing).
 
 ----
+
+## Referências:
+
+Dataset utilizado para treinamento do modelo YOLOv11:
+- [YOLOv11](https://universe.roboflow.com/roboflow-universe-projects/license-plate-recognition-rxg4e)
+
+Modelo YOLOv11 utilizado:
+- [yolov11m.pt](https://docs.ultralytics.com/pt/models/yolo11/)
+
+## Contribuidores:
+
 Desenvolvido por:
 
 - Ananda Campelo
