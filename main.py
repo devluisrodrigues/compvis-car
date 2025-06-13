@@ -3,16 +3,14 @@ from src.models import YOLO, classify_and_crop
 import cv2 as cv
 from collections import Counter
 
-TITLE = 'video'
+# Video title and FPS
+TITLE = 'video1.MOV'
 FPS = 30
-
-
-
 
 def main():
     max_dist = 2
 
-    capture = cv.VideoCapture('video/video1.MOV')
+    capture = cv.VideoCapture(TITLE)
     if not capture.isOpened():
         print("Could not open video file")
         return
@@ -49,6 +47,9 @@ def main():
                 else:
                     print("No valid plate detected.")
                 print('-' * 20)
+                
+                
+        frame = cv.resize(frame, (640, 480))
 
         cv.imshow(TITLE, frame)
 
